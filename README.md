@@ -1,0 +1,79 @@
+# 💎 Bhilal Language
+
+**Bhilal** est un langage de programmation moderne, puissant et intuitif, conçu pour être simple à apprendre tout en offrant des fonctionnalités avancées comme la POO et une bibliothèque standard complète.
+
+## 🚀 Fonctionnalités
+
+- **Syntaxe Épurée** : Inspirée du C et du JavaScript, avec des braces `{}`.
+- **POO Complète** : Classes, instantiation (`nouveau`) et héritage (`herite de`).
+- **Bibliothèque Standard** : Fonctions intégrées pour les listes (`min`, `max`, `croissant`), l'aléatoire et la saisie utilisateur.
+- **Mode Interactif (REPL)** : Testez votre code en temps réel.
+- **Gestion des Erreurs** : Rapports précis avec numéro de ligne et de colonne.
+- **CLI Globale** : Installez et lancez vos scripts `.bh` partout.
+
+## 📦 Installation
+
+```bash
+# Clonez le dépôt
+git clone https://github.com/votre-username/Bhilal.git
+cd Bhilal
+
+# Installez les dépendances
+npm install
+
+# Installez la commande globalement
+sudo npm link
+```
+
+## 🛠️ Usage
+
+### ⚙️ Étape cruciale : Activer la commande
+Pour pouvoir utiliser la commande `Bhilal` directement, allez dans le dossier du code et lancez l'installation :
+```bash
+cd language
+sudo npm link
+```
+
+### Lancer un script
+```bash
+Bhilal mon_script.bh
+```
+
+### Mode Interactif (REPL)
+```bash
+Bhilal
+```
+
+## 📝 Exemple de Code
+
+```bhilal
+classe Animal {
+    fonction manger() { montre("Miam !") }
+}
+
+classe Chien herite de Animal {
+    fonction crier() { montre("Wouaf !") }
+}
+
+soit rex = nouveau Chien()
+rex.manger()
+rex.crier()
+
+soit scores = [45, 12, 89]
+montre("Meilleur score :", max(scores))
+```
+
+## 💻 Compatibilité
+
+Bhilal est propulsé par **Node.js**, ce qui le rend compatible avec :
+- **Windows** 🪟
+- **macOS** 🍎
+- **Linux** 🐧
+
+> [!NOTE]
+> Bien que le langage soit universel, certaines fonctions comme `execute()` dépendent des commandes disponibles sur votre système (par exemple, `ls` sur Linux vs `dir` sur Windows).
+
+## 📜 Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](./LICENSE) pour plus de détails.
+# Language-Bhilal.
