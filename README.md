@@ -15,7 +15,7 @@
 
 ```bash
 # Clonez le dépôt
-git clone https://github.com/votre-username/Bhilal.git
+https://github.com/7Bhil/Language-Bhilal..git
 cd Bhilal
 
 # Installez les dépendances

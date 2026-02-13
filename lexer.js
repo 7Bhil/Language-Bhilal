@@ -52,6 +52,36 @@ class Lexer {
                     "prive", "public", "essaye", "attrape", "enfin", "lance", "abstrait", "interface",
                     "inclure"
                 ];
+
+                // Alias anglais pour les développeurs Python/anglophones
+                const aliases = {
+                    "print": "montre",
+                    "let": "soit",
+                    "if": "si",
+                    "else": "sinon",
+                    "while": "tantque",
+                    "do": "faire",
+                    "function": "fonction",
+                    "return": "renvoie",
+                    "class": "classe",
+                    "new": "nouveau",
+                    "inherits": "herite",
+                    "private": "prive",
+                    "public": "public",
+                    "try": "essaye",
+                    "catch": "attrape",
+                    "finally": "enfin",
+                    "throw": "lance",
+                    "abstract": "abstrait",
+                    "interface": "interface",
+                    "include": "inclure"
+                };
+
+                // Si c'est un alias anglais, le remplacer par le mot français
+                if (aliases[identifier]) {
+                    identifier = aliases[identifier];
+                }
+
                 if (keywords.includes(identifier)) {
                     tokens.push({ type: "KEYWORD", value: identifier, line: startLine, column: startColumn });
                 } else {

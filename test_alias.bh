@@ -1,0 +1,16 @@
+# Test des alias anglais
+print("Hello from Python-style!")
+
+let x = 42
+if x > 10 {
+    print("x est grand")
+}
+
+class Animal {
+    function speak() {
+        print("Some sound")
+    }
+}
+
+let dog = new Animal()
+dog.speak()

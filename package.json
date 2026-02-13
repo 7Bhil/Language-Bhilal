@@ -1,10 +1,10 @@
 {
-  "name": "bhilal-lang",
-  "version": "1.0.0",
+  "name": "bhilal",
+  "version": "1.1.0",
   "description": "Un langage de programmation moderne, simple et puissant.",
   "main": "bhilal.js",
   "bin": {
-    "Bhilal": "./bhilal.js"
+    "bhilal": "./bhilal.js"
   },
   "keywords": [
     "language",
