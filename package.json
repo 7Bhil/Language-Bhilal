@@ -1,6 +1,6 @@
 {
   "name": "bhilal",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Un langage de programmation moderne avec outils de cybersécurité intégrés (Node.js + Go)",
   "main": "bhilal.js",
   "bin": {

@@ -3,5 +3,5 @@
 fonction saluer_bibliotheque() {
     montre("Salutations depuis le module bibliothèque !")
 }
-
+saluer_bibliotheque()
 soit VERSION_BIBLIO = "1.0.0"
