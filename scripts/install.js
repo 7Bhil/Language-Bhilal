@@ -127,7 +127,7 @@ function installGo() {
 
 function compileGoTools() {
   const toolsDir = path.join(__dirname, '..', 'tools');
-  const tools = ['portscanner', 'dirbuster', 'dns_resolver', 'subnet_scanner'];
+  const tools = ['portscanner', 'dirbuster', 'dns_resolver', 'subnet_scanner', 'http_client'];
   
   log('Compilation des outils de cybersécurité Go...', 'info');
   
