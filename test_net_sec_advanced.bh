@@ -1,0 +1,36 @@
+# Test des fonctionnalités réseau et sécurité avancées
+
+montre("--- Test mon_ip() ---")
+soit ip = mon_ip()
+montre("Mon IP publique :", ip)
+
+montre("\n--- Test requete_http avec headers ---")
+soit options = {
+    "entetes": { "User-Agent": "Bhilal-Agent/1.0" }
+}
+soit res = requete_http("https://httpbin.org/get", options)
+si res.status == 200 {
+    montre("Requête GET réussie")
+}
+
+montre("\n--- Test requete_post() ---")
+soit corps = { "projet": "Bhilal", "version": "1.2.1" }
+soit res_post = requete_post("https://httpbin.org/post", corps)
+si res_post.status == 200 {
+    montre("Requête POST réussie")
+}
+
+montre("\n--- Test analyse_en_tetes() ---")
+soit security = analyse_en_tetes("https://www.google.com")
+montre("HSTS activé :", security.HSTS)
+montre("Serveur détecté :", security.Server)
+
+montre("\n--- Test scan_vulnerabilites() ---")
+soit audit = scan_vulnerabilites("http://example.com")
+montre("Cible :", audit.url)
+montre("Score de sécurité :", audit.score_securite, "/ 100")
+pour chaque v dans audit.vulnerabilites {
+    montre("- Alerte :", v)
+}
+
+montre("\n--- Test réseau et sécurité terminé ---")

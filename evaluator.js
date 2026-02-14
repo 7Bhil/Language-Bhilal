@@ -122,6 +122,58 @@ if (typeof module !== 'undefined' && module.exports) {
                 return true;
             }
         };
+        this.functions["existe"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const fs = require('fs');
+                return fs.existsSync(args[0]);
+            }
+        };
+        this.functions["supprimer"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const fs = require('fs');
+                if (fs.existsSync(args[0])) {
+                    if (fs.lstatSync(args[0]).isDirectory()) {
+                        fs.rmdirSync(args[0]);
+                    } else {
+                        fs.unlinkSync(args[0]);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        };
+        this.functions["lister"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const fs = require('fs');
+                return fs.readdirSync(args[0]);
+            }
+        };
+        this.functions["est_dossier"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const fs = require('fs');
+                return fs.lstatSync(args[0]).isDirectory();
+            }
+        };
+        this.functions["creer_dossier"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const fs = require('fs');
+                fs.mkdirSync(args[0], { recursive: true });
+                return true;
+            }
+        };
+        this.functions["renommer"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const fs = require('fs');
+                fs.renameSync(args[0], args[1]);
+                return true;
+            }
+        };
         this.functions["date"] = {
             type: "BuiltIn",
             fn: () => new Date().toLocaleString()
@@ -168,36 +220,116 @@ if (typeof module !== 'undefined' && module.exports) {
         this.functions["requete_http"] = {
             type: "BuiltIn",
             fn: (args) => {
-                const https = require('https');
-                const http = require('http');
-                const url = require('url');
+                const { execSync } = require('child_process');
+                const path = require('path');
+                const fs = require('fs');
                 
-                return new Promise((resolve) => {
-                    const targetUrl = args[0];
-                    const parsed = url.parse(targetUrl);
-                    const client = parsed.protocol === 'https:' ? https : http;
-                    
-                    const req = client.get(targetUrl, (res) => {
-                        let data = '';
-                        res.on('data', chunk => data += chunk);
-                        res.on('end', () => {
-                            resolve({
-                                status: res.statusCode,
-                                headers: res.headers,
-                                body: data
-                            });
-                        });
-                    });
-                    
-                    req.on('error', (e) => {
-                        resolve({ error: e.message });
-                    });
-                    
-                    req.setTimeout(5000, () => {
-                        req.destroy();
-                        resolve({ error: "Timeout" });
-                    });
-                });
+                const targetUrl = args[0];
+                const optionsArg = args[1] || {};
+                
+                const method = (optionsArg.methode || 'GET').toUpperCase();
+                const headers = JSON.stringify(optionsArg.entetes || {});
+                const body = optionsArg.corps ? (typeof optionsArg.corps === 'string' ? optionsArg.corps : JSON.stringify(optionsArg.corps)) : "";
+                
+                const toolPath = path.join(__dirname, 'tools', 'http_client');
+                if (!fs.existsSync(toolPath)) {
+                    return { error: "Outil http_client non compilé" };
+                }
+                
+                try {
+                    // Utiliser un shell pour passer les arguments proprement, ou un tableau d'arguments pour execFileSync
+                    const { execFileSync } = require('child_process');
+                    const output = execFileSync(toolPath, [method, targetUrl, headers, body]).toString();
+                    return JSON.parse(output);
+                } catch (e) {
+                    return { error: e.message };
+                }
+            }
+        };
+        this.functions["requete_post"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const url = args[0];
+                const donnees = args[1];
+                const entetes = args[2] || {};
+                
+                return this.functions["requete_http"].fn([url, {
+                    methode: "POST",
+                    corps: donnees,
+                    entetes: {
+                        'Content-Type': 'application/json',
+                        ...entetes
+                    }
+                }]);
+            }
+        };
+        this.functions["mon_ip"] = {
+            type: "BuiltIn",
+            fn: () => {
+                const res = this.functions["requete_http"].fn(["https://api.ipify.org?format=json"]);
+                if (res.error) return res;
+                try {
+                    const data = JSON.parse(res.body);
+                    return data.ip;
+                } catch (e) {
+                    return res.body;
+                }
+            }
+        };
+        this.functions["analyse_en_tetes"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const res = this.functions["requete_http"].fn([args[0]]);
+                if (res.error) return res;
+                const h = {};
+                // Normaliser les clés de headers (elles peuvent être des tableaux en Go JSON)
+                for (const key in res.headers) {
+                    h[key.toLowerCase()] = res.headers[key][0];
+                }
+                
+                return {
+                    "HSTS": !!h['strict-transport-security'],
+                    "CSP": !!h['content-security-policy'],
+                    "X-Frame-Options": !!h['x-frame-options'],
+                    "X-XSS-Protection": !!h['x-xss-protection'],
+                    "Server": h['server'] || "Inconnu"
+                };
+            }
+        };
+        this.functions["scan_vulnerabilites"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const url = args[0];
+                const headers = this.functions["analyse_en_tetes"].fn([url]);
+                if (headers.error) return headers;
+                
+                const vulns = [];
+                if (!headers.HSTS) vulns.push("HSTS Manquant");
+                if (!headers.CSP) vulns.push("CSP Manquant");
+                if (headers.Server && headers.Server.includes("/")) vulns.push("Version du serveur exposée");
+                
+                return { 
+                    url, 
+                    score_securite: 100 - (vulns.length * 20), 
+                    vulnerabilites: vulns 
+                };
+            }
+        };
+        this.functions["test_xss_basique"] = {
+            type: "BuiltIn",
+            fn: (args) => {
+                const url = args[0];
+                const payload = "<script>alert(1)</script>";
+                const testUrl = url.includes("?") ? `${url}&xss=${payload}` : `${url}?xss=${payload}`;
+                const res = this.functions["requete_http"].fn([testUrl]);
+                if (res.error) return res;
+                
+                const reflected = res.body.includes(payload);
+                return {
+                    url: url,
+                    vulnerable: reflected,
+                    detail: reflected ? "Le payload XSS a été retrouvé dans la réponse" : "Pas de réflexion détectée"
+                };
             }
         };
         // === Outil: DirBuster (brute force répertoires) ===
@@ -583,6 +715,40 @@ if (typeof module !== 'undefined' && module.exports) {
                     }
                     break;
                 }
+                case "UnaryExpression": {
+                    const argument = this.evaluate(node.argument);
+                    switch (node.operator) {
+                        case "non": return !argument;
+                        case "-": return -argument;
+                        case "typeof": return typeof argument;
+                        default: throw new Error(`[Ligne ${node.line}] Opérateur unaire inconnu: ${node.operator}`);
+                    }
+                }
+                case "PourChaqueStatement": {
+                    const iterable = this.evaluate(node.iterable);
+                    const previousEnv = this.env;
+                    
+                    if (Array.isArray(iterable)) {
+                        for (const item of iterable) {
+                            this.env = new Environment(previousEnv);
+                            this.env.define(node.variable, item);
+                            for (const stmt of node.body) {
+                                this.evaluate(stmt);
+                            }
+                        }
+                    } else if (typeof iterable === 'object' && iterable !== null) {
+                        for (const key in iterable) {
+                            if (key.startsWith("__")) continue; // Skip internal properties
+                            this.env = new Environment(previousEnv);
+                            this.env.define(node.variable, key);
+                            for (const stmt of node.body) {
+                                this.evaluate(stmt);
+                            }
+                        }
+                    }
+                    this.env = previousEnv;
+                    break;
+                }
                 case "IncludeStatement": {
                     const fs = require('fs');
                     const path = node.path;
@@ -755,6 +921,8 @@ if (typeof module !== 'undefined' && module.exports) {
             case ">": return left > right;
             case "<=": return left <= right;
             case ">=": return left >= right;
+            case "et": return left && right;
+            case "ou": return left || right;
         }
     }
 }

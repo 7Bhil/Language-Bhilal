@@ -50,7 +50,7 @@ class Lexer {
                     "montre", "soit", "si", "sinon", "tantque", "faire", "fonction", "renvoie", 
                     "classe", "nouveau", "herite", "de",
                     "prive", "public", "essaye", "attrape", "enfin", "lance", "abstrait", "interface",
-                    "inclure"
+                    "inclure", "pour", "chaque", "dans", "et", "ou", "non", "typeof", "vrai", "faux", "nul"
                 ];
 
                 // Alias anglais pour les développeurs Python/anglophones
@@ -75,6 +75,16 @@ class Lexer {
                     "abstract": "abstrait",
                     "interface": "interface",
                     "include": "inclure",
+                    "for": "pour",
+                    "each": "chaque",
+                    "in": "dans",
+                    "and": "et",
+                    "or": "ou",
+                    "not": "non",
+                    "typeof": "typeof",
+                    "true": "vrai",
+                    "false": "faux",
+                    "null": "nul",
                     "scan_ports": "scan_ports",
                     "port_scan": "scan_ports",
                     "http_request": "requete_http",

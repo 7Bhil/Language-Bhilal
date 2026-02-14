@@ -45,6 +45,7 @@ class Parser {
             if (token.value === "essaye") return this.parseTryStatement();
             if (token.value === "lance") return this.parseThrowStatement();
             if (token.value === "inclure") return this.parseIncludeStatement();
+            if (token.value === "pour") return this.parsePourChaqueStatement();
         }
         
         const expr = this.parseExpression();
@@ -252,28 +253,91 @@ class Parser {
     }
 
     parseExpression() {
-        let left = this.parsePrimary();
+        return this.parseAssignment();
+    }
+
+    parseAssignment() {
+        let left = this.parseOr();
 
         if (this.peek() && this.peek().value === "=") {
             const operatorToken = this.eat();
-            const right = this.parseExpression(); // Right-associative assignment
+            const right = this.parseAssignment(); // Right-associative
             return this.createNode("AssignmentExpression", { left, right }, operatorToken);
         }
 
-        while (this.peek() && (
-            this.peek().value === "+" || this.peek().value === "-" || 
-            this.peek().value === "*" || this.peek().value === "/" ||
-            this.peek().value === "==" || this.peek().value === "!=" ||
-            this.peek().value === "<" || this.peek().value === ">" ||
-            this.peek().value === "<=" || this.peek().value === ">=" ||
-            this.peek().value === "."
-        )) {
-            const operatorToken = this.eat();
-            const right = this.parsePrimary();
-            left = this.createNode("BinaryExpression", { operator: operatorToken.value, left, right }, operatorToken);
-        }
-
         return left;
+    }
+
+    parseOr() {
+        let left = this.parseAnd();
+        while (this.peek() && this.peek().value === "ou") {
+            const operator = this.eat();
+            const right = this.parseAnd();
+            left = this.createNode("BinaryExpression", { operator: operator.value, left, right }, operator);
+        }
+        return left;
+    }
+
+    parseAnd() {
+        let left = this.parseEquality();
+        while (this.peek() && this.peek().value === "et") {
+            const operator = this.eat();
+            const right = this.parseEquality();
+            left = this.createNode("BinaryExpression", { operator: operator.value, left, right }, operator);
+        }
+        return left;
+    }
+
+    parseEquality() {
+        let left = this.parseComparison();
+        while (this.peek() && (this.peek().value === "==" || this.peek().value === "!=")) {
+            const operator = this.eat();
+            const right = this.parseComparison();
+            left = this.createNode("BinaryExpression", { operator: operator.value, left, right }, operator);
+        }
+        return left;
+    }
+
+    parseComparison() {
+        let left = this.parseAddition();
+        while (this.peek() && (
+            this.peek().value === "<" || this.peek().value === ">" ||
+            this.peek().value === "<=" || this.peek().value === ">="
+        )) {
+            const operator = this.eat();
+            const right = this.parseAddition();
+            left = this.createNode("BinaryExpression", { operator: operator.value, left, right }, operator);
+        }
+        return left;
+    }
+
+    parseAddition() {
+        let left = this.parseMultiplication();
+        while (this.peek() && (this.peek().value === "+" || this.peek().value === "-")) {
+            const operator = this.eat();
+            const right = this.parseMultiplication();
+            left = this.createNode("BinaryExpression", { operator: operator.value, left, right }, operator);
+        }
+        return left;
+    }
+
+    parseMultiplication() {
+        let left = this.parseUnary();
+        while (this.peek() && (this.peek().value === "*" || this.peek().value === "/" || this.peek().value === ".")) {
+            const operator = this.eat();
+            const right = this.parseUnary();
+            left = this.createNode("BinaryExpression", { operator: operator.value, left, right }, operator);
+        }
+        return left;
+    }
+
+    parseUnary() {
+        if (this.peek() && (this.peek().value === "non" || this.peek().value === "typeof" || this.peek().value === "-")) {
+            const operator = this.eat();
+            const argument = this.parseUnary();
+            return this.createNode("UnaryExpression", { operator: operator.value, argument }, operator);
+        }
+        return this.parsePrimary();
     }
 
     parsePrimary() {
@@ -288,6 +352,12 @@ class Parser {
 
         if (token.type === "NUMBER") return this.createNode("Literal", { value: this.eat().value }, token);
         if (token.type === "STRING") return this.createNode("Literal", { value: this.eat().value }, token);
+        if (token.type === "KEYWORD") {
+            if (token.value === "vrai") return this.createNode("Literal", { value: true }, this.eat());
+            if (token.value === "faux") return this.createNode("Literal", { value: false }, this.eat());
+            if (token.value === "nul") return this.createNode("Literal", { value: null }, this.eat());
+        }
+
         if (token.type === "KEYWORD" && token.value === "nouveau") {
             const startToken = this.eat(); // eat 'nouveau'
             const name = this.eat().value;
@@ -398,6 +468,25 @@ class Parser {
         }
         this.eat(); // eat '}'
         return this.createNode("InterfaceDeclaration", { name: nameToken.value, methods }, startToken);
+    }
+
+    parsePourChaqueStatement() {
+        const startToken = this.eat(); // eat 'pour'
+        if (this.eat().value !== "chaque") throw new Error(`[Ligne ${this.line}] 'chaque' attendu après 'pour'`);
+        
+        const variable = this.eat();
+        if (variable.type !== "IDENTIFIER") throw new Error(`[Ligne ${this.line}] Nom de variable attendu dans la boucle pour chaque`);
+        
+        if (this.eat().value !== "dans") throw new Error(`[Ligne ${this.line}] 'dans' attendu`);
+        
+        const iterable = this.parseExpression();
+        const body = this.parseBlock();
+        
+        return this.createNode("PourChaqueStatement", { 
+            variable: variable.value, 
+            iterable, 
+            body 
+        }, startToken);
     }
 }
 
